@@ -1,5 +1,7 @@
 # nginx_log_parser
 
+![python-app workflow](https://github.com/ployt0/nginx_log_parser/actions/workflows/python-app.yml/badge.svg)
+
 Loving learning nginx, here's a parser to help analyse logs
 
 ## Usage
