@@ -79,3 +79,6 @@ class ChronoReqs(LogLineParser):
             fail_list, period)
         return bucket_starts, bucketed_fails
 
+
+# todo add graphing by period, by status code, all bucketed, probably.
+# todo check, and graph, paths now that nginx is denying the main offenders.
