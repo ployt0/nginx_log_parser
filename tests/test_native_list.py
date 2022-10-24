@@ -1,12 +1,14 @@
 import datetime
+import json
 import time
 from collections import Counter
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
 from main import KNOWN_FRIENDLY_TESTERS
 from native_list import ChronoReqs, LogLineParser
+from requests import Response
 
 
 @pytest.mark.parametrize("bit_after_time,expected_list", [
@@ -57,7 +59,7 @@ def chrono_reqs():
     return ChronoReqs(open("access.log").read(), KNOWN_FRIENDLY_TESTERS)
 
 
-def test_requests_per_period(chrono_reqs):
+def dtest_requests_per_period(chrono_reqs):
     t0 = time.time()
     bucket_starts, bucketed_reqs = ChronoReqs.requests_per_period(
         chrono_reqs.req_list, datetime.timedelta(hours=2))
@@ -65,7 +67,7 @@ def test_requests_per_period(chrono_reqs):
     print("per period took {:.04f}".format(t1 - t0))
 
 
-def test_failures_per_5m_period(chrono_reqs):
+def dtest_failures_per_5m_period(chrono_reqs):
     t0 = time.time()
     bucket_starts, bucketed_fails = ChronoReqs.failures_per_period(
         chrono_reqs.req_list, datetime.timedelta(minutes=5))
@@ -74,7 +76,7 @@ def test_failures_per_5m_period(chrono_reqs):
     print("per period took {:.04f}".format(t1 - t0))
 
 
-def test_failures_per_1hr_period(chrono_reqs):
+def dtest_failures_per_1hr_period(chrono_reqs):
     t0 = time.time()
     bucket_starts, bucketed_fails = ChronoReqs.failures_per_period(
         chrono_reqs.req_list, datetime.timedelta(hours=1))
@@ -113,7 +115,7 @@ def test_divide_reqs_by_path_prefixes(chrono_reqs):
 
 
 def test_find_unusual_meth_path_protos(chrono_reqs):
-    # So unusual I don't understand them. I can refer back to see if I've
+    # So unusual that I don't understand them. I can refer back to see if I've
     # blocked them later.
     req_list_fltrd = ChronoReqs.find_unusual_meth_path_protos(chrono_reqs.req_list)
     assert req_list_fltrd == [[
@@ -180,5 +182,15 @@ def test_find_unusual_meth_path_protos(chrono_reqs):
         ], 400, 157, '-', '-']]
 
 
+@patch('native_list.requests.get', spec=Response)
+def test_remove_googlebot(mock_get, chrono_reqs):
+    # This can be slow so we're only going to test the first 2000 requests.
+    sample_size = 2000
+    with open("sample_gbots.json") as f:
+        SAMPLE_GBOTS = json.load(f)
+    mock_get.return_value.json.return_value = SAMPLE_GBOTS
+    req_list_fltrd = ChronoReqs.remove_googlebot(
+        chrono_reqs.req_list[:sample_size])
+    assert(len(req_list_fltrd)) == 1933
 
 

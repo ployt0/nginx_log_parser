@@ -129,13 +129,13 @@ class ChronoReqs(LogLineParser):
         return [req for req in req_list if len(req[2]) > 3]
 
     @staticmethod
-    def remove_googlebot(req_list: list[list]):
+    def remove_googlebot(req_list: list[list]) -> list[list]:
         res = requests.get("https://developers.google.com/static/search/apis/ipranges/googlebot.json")
         prefixes = res.json()["prefixes"]
-        cidrs = [d["ipv4Prefix"] for d in prefixes if "ipv4Prefix" in d]
+        cidrs = [ipaddress.ip_network(d["ipv4Prefix"]) for d in prefixes if "ipv4Prefix" in d]
         return [x for x in req_list if not any(
-            ipaddress.ip_address(x[1]) in ipaddress.ip_network(
-            cidr) for cidr in cidrs)]
+            ipaddress.ip_address(x[1].strip()) in cidr
+            for cidr in cidrs)]
 
 
 
