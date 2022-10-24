@@ -99,5 +99,86 @@ def test_get_paths(chrono_reqs):
     assert cmn_paths == expected_paths
 
 
+def test_divide_reqs_by_path_prefixes(chrono_reqs):
+    # These are just the most popular prefixes from the previous test.
+    # Makes sense to try and aggregate requests under the paths of the most
+    # common requests. Unless those paths were all already common. Feat. bloat.
+    prefix_dict = {x: list() for x in [
+        "/old/", "/new/", "/blog/", "/feed/",
+        "/static/", "/wordpress/", "/wp/",
+        "/"
+    ]}
+    unmatched = ChronoReqs.divide_reqs_by_path_prefixes(prefix_dict, chrono_reqs.req_list)
+    assert len(unmatched) == 36
+
+
+def test_find_unusual_meth_path_protos(chrono_reqs):
+    # So unusual I don't understand them. I can refer back to see if I've
+    # blocked them later.
+    req_list_fltrd = ChronoReqs.find_unusual_meth_path_protos(chrono_reqs.req_list)
+    assert req_list_fltrd == [[
+        '220910 183310', '    106.75.176.0',
+        [
+            '{\\x22params\\x22:', '[\\x22miner1\\x22,', '\\x22password\\x22],',
+            '\\x22id\\x22:', '2,', '\\x22method\\x22:',
+            '\\x22mining.authorize\\x22}'
+        ], 400, 157, '-', '-'], [
+        '220910 183311', '    106.75.176.0', [
+            '{\\x22id\\x22:1,\\x22jsonrpc\\x22:\\x222.0\\x22,\\x22method\\x22:'
+            '\\x22login\\x22,\\x22params\\x22:{\\x22login\\x22:\\x22blue1'
+            '\\x22,\\x22pass\\x22:\\x22x\\x22,\\x22agent\\x22:\\x22Windows',
+            'NT', '6.1;', 'Win64;', 'x64\\x22}}'
+        ], 400, 157, '-', '-'], [
+        '220910 183312', '    106.75.176.0', [
+            '{\\x22params\\x22:', '[\\x22miner1\\x22,', '\\x22bf\\x22,',
+            '\\x2200000001\\x22,', '\\x22504e86ed\\x22,',
+            '\\x22b2957c02\\x22],', '\\x22id\\x22:', '4,', '\\x22method\\x22:',
+            '\\x22mining.submit\\x22}'
+        ], 400, 157, '-', '-'], [
+        '220914 211725', '    45.148.120.0', [
+            '{\\x22id\\x22:', '1,', '\\x22method\\x22:',
+            '\\x22mining.subscribe\\x22,', '\\x22params\\x22:',
+            '[\\x22cpuminer/2.5.1\\x22]}'
+        ], 400, 157, '-', '-'], [
+        '220914 211727', '    45.148.120.0', [
+            '{\\x22id\\x22:', '1,', '\\x22method\\x22:',
+            '\\x22mining.subscribe\\x22,', '\\x22params\\x22:',
+            '[\\x22MinerName/1.0.0\\x22,', '\\x22EthereumStratum/1.0.0\\x22]}'
+        ], 400, 157, '-', '-'], [
+        '220914 211728', '    45.148.120.0', [
+            '{\\x22id\\x22:1,\\x22jsonrpc\\x22:\\x222.0\\x22,\\x22method\\x22:'
+            '\\x22login\\x22,\\x22params\\x22:{\\x22login\\x22:'
+            '\\x2245u1zDdkh78CLRmu6mCkmsFWGZw6qtjHQTP26BXKQgAvH1NgGRLmTWg1ykpJ2qEizxeeKKAbcgu6X6FFafczhZEH468AWhR'
+            '\\x22,\\x22pass\\x22:\\x22x\\x22,\\x22agent\\x22:'
+            '\\x22XMRig/6.15.3',
+            '(Windows', 'NT', '10.0;', 'Win64;', 'x64)', 'libuv/1.42.0',
+            'msvc/2019\\x22,\\x22algo\\x22:[\\x22cn/1\\x22,\\x22cn/2\\x22,'
+            '\\x22cn/r\\x22,\\x22cn/fast\\x22,\\x22cn/half\\x22,'
+            '\\x22cn/xao\\x22,\\x22cn/rto\\x22,\\x22cn/rwz\\x22,'
+            '\\x22cn/zls\\x22,\\x22cn/double\\x22,\\x22cn/ccx\\x22,'
+            '\\x22cn-lite/1\\x22,\\x22cn-heavy/0\\x22,\\x22cn-heavy/tube'
+            '\\x22,\\x22cn-heavy/xhv\\x22,\\x22cn-pico\\x22,\\x22cn-pico/tlo'
+            '\\x22,\\x22cn/upx2\\x22,\\x22rx/0\\x22,\\x22rx/wow\\x22,'
+            '\\x22rx/arq\\x22,\\x22rx/graft\\x22,\\x22rx/sfx\\x22,'
+            '\\x22rx/keva\\x22,\\x22argon2/chukwa\\x22,\\x22argon2/chukwav2'
+            '\\x22,\\x22argon2/ninja\\x22,\\x22astrobwt\\x22]}}'
+        ], 400, 157, '-', '-'], [
+        '220918 013307', '    106.75.178.0', [
+            '{\\x22params\\x22:', '[\\x22miner1\\x22,', '\\x22password\\x22],',
+            '\\x22id\\x22:', '2,', '\\x22method\\x22:',
+            '\\x22mining.authorize\\x22}'], 400, 157, '-', '-'], [
+        '220918 013308', '    106.75.178.0', [
+            '{\\x22id\\x22:1,\\x22jsonrpc\\x22:\\x222.0\\x22,\\x22method\\x22:'
+            '\\x22login\\x22,\\x22params\\x22:{\\x22login\\x22:\\x22blue1'
+            '\\x22,\\x22pass\\x22:\\x22x\\x22,\\x22agent\\x22:\\x22Windows',
+            'NT', '6.1;', 'Win64;', 'x64\\x22}}'], 400, 157, '-', '-'], [
+        '220918 013309', '    106.75.178.0', [
+            '{\\x22params\\x22:', '[\\x22miner1\\x22,', '\\x22bf\\x22,',
+            '\\x2200000001\\x22,', '\\x22504e86ed\\x22,',
+            '\\x22b2957c02\\x22],', '\\x22id\\x22:', '4,',
+            '\\x22method\\x22:', '\\x22mining.submit\\x22}'
+        ], 400, 157, '-', '-']]
+
+
 
 

@@ -79,7 +79,8 @@ class ChronoReqs(LogLineParser):
         return [req for req in req_list if min_code <= req[3] <= max_code]
 
     @staticmethod
-    def failures_per_period(req_list, period: datetime.timedelta):
+    def failures_per_period(req_list, period: datetime.timedelta)\
+            -> tuple[list[datetime], list[list]]:
         fail_list = ChronoReqs.filter_by_status(req_list, 400, 499)
         bucket_starts, bucketed_fails = ChronoReqs.requests_per_period(
             fail_list, period)
@@ -94,20 +95,21 @@ class ChronoReqs(LogLineParser):
         return Counter(req[2][1] for req in req_list if len(req[2]) > 2)
 
     @staticmethod
-    def get_reqs_matching(path_match: str, req_list: list[list]):
+    def get_reqs_matching(path_match: str, req_list: list[list]) -> list[list]:
         return [req for req in req_list if
                 len(req[2]) > 2 and re.match(path_match, req[2][1])]
 
     @staticmethod
-    def divide_reqs_by_path_prefixes(prefix_dict: dict[str: list], req_list: list[list]):
+    def divide_reqs_by_path_prefixes(prefix_dict: dict[str, list], req_list: list[list]):
         """
         Divide requests between mutually exclusive path prefixes. If not
         mutually exclusive the first will match.
 
-        :param prefix_dict: indexed by mutually exclusive path prefixes,
-            caller to initialise values to empty lists.
-        :param req_list: list of requests
-        :return: any requests that weren't matched
+        :param prefix_dict: indexed by path prefixes. Mostly mutually exclusive.
+            Since python 3.7 key order is guaranteed. We may include a fallback
+            as the final element. Caller to initialise values to empty lists.
+        :param req_list: list of requests.
+        :return: any requests that weren't matched.
         """
         unmatched = []
         for req in req_list:
@@ -121,8 +123,9 @@ class ChronoReqs(LogLineParser):
         return unmatched
 
     @staticmethod
-    def find_unusual_meth_path_protos(req_list: list[list]):
-        # These appear very sus. Logins, miners, rpc. Sus. Block if enough volume.
+    def find_unusual_meth_path_protos(req_list: list[list]) -> list[list]:
+        # These appear very suspicious. Logins, miners, rpc... Sus.
+        # Block if enough volume.
         return [req for req in req_list if len(req[2]) > 3]
 
     @staticmethod
