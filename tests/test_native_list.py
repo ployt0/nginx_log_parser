@@ -1,5 +1,6 @@
 import datetime
 import time
+from collections import Counter
 from unittest.mock import Mock
 
 import pytest
@@ -51,30 +52,52 @@ def test_chronological_requests():
     print(chrono_reqs.req_list)
 
 
-def test_requests_per_period():
-    chrono_reqs = ChronoReqs(open("access.log").read(), KNOWN_FRIENDLY_TESTERS)
+@pytest.fixture(scope="module")
+def chrono_reqs():
+    return ChronoReqs(open("access.log").read(), KNOWN_FRIENDLY_TESTERS)
+
+
+def test_requests_per_period(chrono_reqs):
     t0 = time.time()
-    bucket_starts, bucketed_reqs = ChronoReqs.requests_per_period(chrono_reqs.req_list, datetime.timedelta(hours=2))
+    bucket_starts, bucketed_reqs = ChronoReqs.requests_per_period(
+        chrono_reqs.req_list, datetime.timedelta(hours=2))
     t1 = time.time()
     print("per period took {:.04f}".format(t1 - t0))
 
 
-def test_failures_per_5m_period():
-    chrono_reqs = ChronoReqs(open("access.log").read(), KNOWN_FRIENDLY_TESTERS)
+def test_failures_per_5m_period(chrono_reqs):
     t0 = time.time()
-    bucket_starts, bucketed_fails = chrono_reqs.failures_per_period(datetime.timedelta(minutes=5))
+    bucket_starts, bucketed_fails = ChronoReqs.failures_per_period(
+        chrono_reqs.req_list, datetime.timedelta(minutes=5))
+    t1 = time.time()
+    fails_per_period = {x[0]: len(x[1]) for x in zip(bucket_starts, bucketed_fails)}
+    print("per period took {:.04f}".format(t1 - t0))
+
+
+def test_failures_per_1hr_period(chrono_reqs):
+    t0 = time.time()
+    bucket_starts, bucketed_fails = ChronoReqs.failures_per_period(
+        chrono_reqs.req_list, datetime.timedelta(hours=1))
     t1 = time.time()
     fails_per_period = {x[0]: len(x[1]) for x in zip(bucket_starts, bucketed_fails)}
     print("per period took {:.04f}".format(t1 - t0))
 
 
-def test_failures_per_1hr_period():
-    chrono_reqs = ChronoReqs(open("access.log").read(), KNOWN_FRIENDLY_TESTERS)
-    t0 = time.time()
-    bucket_starts, bucketed_fails = chrono_reqs.failures_per_period(datetime.timedelta(hours=1))
-    t1 = time.time()
-    fails_per_period = {x[0]: len(x[1]) for x in zip(bucket_starts, bucketed_fails)}
-    print("per period took {:.04f}".format(t1 - t0))
+def test_get_paths(chrono_reqs):
+    cmn_paths = ChronoReqs.get_paths(chrono_reqs.req_list).most_common(10)
+    expected_paths = [
+        ('/xmlrpc.php', 4550),
+        ('/', 1306),
+        ('/wp/xmlrpc.php', 745),
+        ('/wordpress/xmlrpc.php', 745),
+        ('/old/xmlrpc.php', 745),
+        ('/new/xmlrpc.php', 745),
+        ('/blog/xmlrpc.php', 745),
+        ('/feed/', 468),
+        ('/static/js/menu_populators.js', 280),
+        ('/static/js/common_utils.js', 276)]
+    assert cmn_paths == expected_paths
+
 
 
 

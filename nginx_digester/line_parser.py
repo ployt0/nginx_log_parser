@@ -21,12 +21,12 @@ class LogLineParser:
         # Attempts to inject quotes here are escaped as \x22.
         if close_qt == -1:
             return
-        action_addy_proto = line[curs:close_qt].split()
-        list_target.append(action_addy_proto)
+        method_path_proto = line[curs:close_qt].split()
+        list_target.append(method_path_proto)
         curs = close_qt + 2
         code, bytes_returned = map(int, line[curs:].split(" ")[0:2])
         list_target.extend([code, bytes_returned])
-        # Add: referrer, user_agent, x_forwarded_for:
+        # Add optional: referrer, user_agent, x_forwarded_for:
         for _ in range(3):
             curs = line.find('"', curs + 1)
             if curs == -1:

@@ -2,7 +2,7 @@
 
 ![python-app workflow](https://github.com/ployt0/nginx_log_parser/actions/workflows/python-app.yml/badge.svg)
 
-Loving learning nginx, here's a parser to help analyse logs
+Exploring nginx; here's a parser to help analyse logs.
 
 ## Usage
 
@@ -16,4 +16,5 @@ or:
 docker logs nginx_cont | nginx_digester/main.py access.log
 ```
 
-Still need to actually do something with the output.
+I provided tests/access.log for testing. It was curated using the simplest of nginx configurations. I anonymised it as best I could because I can't prove 99% of the addresses were bots.
+

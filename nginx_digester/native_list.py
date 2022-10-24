@@ -4,6 +4,11 @@ ie. having requests indexed by IP.
 """
 
 import datetime
+import ipaddress
+import re
+from collections import Counter
+
+import requests
 
 from line_parser import LogLineParser, INTERNAL_DT_FORMAT
 
@@ -73,11 +78,62 @@ class ChronoReqs(LogLineParser):
     def filter_by_status(req_list, min_code: int, max_code: int):
         return [req for req in req_list if min_code <= req[3] <= max_code]
 
-    def failures_per_period(self, period: datetime.timedelta):
-        fail_list = ChronoReqs.filter_by_status(self.req_list, 400, 499)
+    @staticmethod
+    def failures_per_period(req_list, period: datetime.timedelta):
+        fail_list = ChronoReqs.filter_by_status(req_list, 400, 499)
         bucket_starts, bucketed_fails = ChronoReqs.requests_per_period(
             fail_list, period)
         return bucket_starts, bucketed_fails
+
+    @staticmethod
+    def get_paths(req_list: list[list]) -> Counter:
+        """
+        :param req_list: may be member, or already filtered.
+        :return: Counter, call `.most_common(20)` for 20 most common paths.
+        """
+        return Counter(req[2][1] for req in req_list if len(req[2]) > 2)
+
+    @staticmethod
+    def get_reqs_matching(path_match: str, req_list: list[list]):
+        return [req for req in req_list if
+                len(req[2]) > 2 and re.match(path_match, req[2][1])]
+
+    @staticmethod
+    def divide_reqs_by_path_prefixes(prefix_dict: dict[str: list], req_list: list[list]):
+        """
+        Divide requests between mutually exclusive path prefixes. If not
+        mutually exclusive the first will match.
+
+        :param prefix_dict: indexed by mutually exclusive path prefixes,
+            caller to initialise values to empty lists.
+        :param req_list: list of requests
+        :return: any requests that weren't matched
+        """
+        unmatched = []
+        for req in req_list:
+            if len(req[2]) > 2:
+                for k in prefix_dict.keys():
+                    if req[2][1].startswith(k):
+                        prefix_dict[k].append(req)
+                        break
+                else:
+                    unmatched.append(req)
+        return unmatched
+
+    @staticmethod
+    def find_unusual_meth_path_protos(req_list: list[list]):
+        # These appear very sus. Logins, miners, rpc. Sus. Block if enough volume.
+        return [req for req in req_list if len(req[2]) > 3]
+
+    @staticmethod
+    def remove_googlebot(req_list: list[list]):
+        res = requests.get("https://developers.google.com/static/search/apis/ipranges/googlebot.json")
+        prefixes = res.json()["prefixes"]
+        cidrs = [d["ipv4Prefix"] for d in prefixes if "ipv4Prefix" in d]
+        return [x for x in req_list if not any(
+            ipaddress.ip_address(x[1]) in ipaddress.ip_network(
+            cidr) for cidr in cidrs)]
+
 
 
 # todo add graphing by period, by status code, all bucketed, probably.
