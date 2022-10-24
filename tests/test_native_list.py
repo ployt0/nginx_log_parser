@@ -59,7 +59,7 @@ def chrono_reqs():
     return ChronoReqs(open("access.log").read(), KNOWN_FRIENDLY_TESTERS)
 
 
-def dtest_requests_per_period(chrono_reqs):
+def test_requests_per_period(chrono_reqs):
     t0 = time.time()
     bucket_starts, bucketed_reqs = ChronoReqs.requests_per_period(
         chrono_reqs.req_list, datetime.timedelta(hours=2))
@@ -67,7 +67,7 @@ def dtest_requests_per_period(chrono_reqs):
     print("per period took {:.04f}".format(t1 - t0))
 
 
-def dtest_failures_per_5m_period(chrono_reqs):
+def test_failures_per_5m_period(chrono_reqs):
     t0 = time.time()
     bucket_starts, bucketed_fails = ChronoReqs.failures_per_period(
         chrono_reqs.req_list, datetime.timedelta(minutes=5))
@@ -76,7 +76,7 @@ def dtest_failures_per_5m_period(chrono_reqs):
     print("per period took {:.04f}".format(t1 - t0))
 
 
-def dtest_failures_per_1hr_period(chrono_reqs):
+def test_failures_per_1hr_period(chrono_reqs):
     t0 = time.time()
     bucket_starts, bucketed_fails = ChronoReqs.failures_per_period(
         chrono_reqs.req_list, datetime.timedelta(hours=1))
